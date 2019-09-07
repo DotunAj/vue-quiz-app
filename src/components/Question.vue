@@ -176,5 +176,9 @@ export default {
   .quiz .actions {
     justify-content: center;
   }
+
+  #submit {
+    margin-left: 10px;
+  }
 }
 </style>
