@@ -9,7 +9,7 @@
     </div>
     <div class="actions">
       <button :disabled="index >= 9" id="next" @click="skip">Skip</button>
-      <button id="submit" @click="submitAnswer" :disabled="submitted">Submit</button>
+      <button id="submit" @click="submitAnswer" :disabled="submitted || selectedIndex === null">Submit</button>
     </div>
   </div>
 </template>
@@ -95,6 +95,8 @@ export default {
         this.selectedIndex === index
       ) {
         submit = "answer wrong";
+      } else if (!this.submitted && this.selectedIndex === index){
+        submit = "answer selected"
       }
 
       return submit;
@@ -141,7 +143,6 @@ export default {
 
 #submit:disabled {
   background: #637af06c !important;
-
   cursor: not-allowed;
 }
 
@@ -161,6 +162,12 @@ export default {
 #next:hover {
   background: #159826d2;
 }
+
+.selected {
+  background: #d0e2dd;
+  border: 1px solid #d0e2dd;
+}
+
 .correct {
   background: #acdfba;
   border: 1px solid #acdfba;
