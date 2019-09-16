@@ -1,37 +1,58 @@
 <template>
-  <div class="quiz">
-    <p>
-      <span>{{index+1}}.</span>
-      {{currentQuestion.question}}
-    </p>
-    <div v-for="(answer, index) in shuffledAnswers" :key="index" class="answers">
-      <button @click="selectAnswer(index)" :class="submitClass(index)">{{answer}}</button>
+  <div>
+    <div v-if="questions.length" class="quiz-modal">
+      <router-link to="/">Go Back</router-link>
+      <Progress :numTotal="numTotal" :numCorrect="numCorrect"></Progress>
+      <div class="quiz">
+        <p v-html="index+1 + '. ' + currentQuestion.question"></p>
+        <div v-for="(answer, index) in shuffledAnswers" :key="index" class="answers">
+          <button @click="selectAnswer(index)" :class="submitClass(index)" v-html="answer"></button>
+        </div>
+        <div class="actions">
+          <button :disabled="index >= 9 || submitted" id="next" @click="skip">Skip</button>
+          <button
+            id="submit"
+            @click="submitAnswer"
+            :disabled="submitted || selectedIndex === null"
+          >Submit</button>
+        </div>
+      </div>
     </div>
-    <div class="actions">
-      <button :disabled="index >= 9" id="next" @click="skip">Skip</button>
-      <button id="submit" @click="submitAnswer" :disabled="submitted || selectedIndex === null">Submit</button>
+    <div v-else class="lds-ring">
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
     </div>
   </div>
 </template>
 
 <script>
+import Progress from "./Progress.vue";
 import _ from "lodash";
+import { mapGetters } from "vuex";
 
 export default {
   name: "Question",
+  components: { Progress },
   props: {
-    currentQuestion: Object,
-    next: Function,
-    index: Number,
-    increment: Function
+    difficulty: String
   },
   data() {
     return {
+      questions: [],
+      index: 0,
       selectedIndex: null,
       shuffledAnswers: [],
       correctIndex: null,
       submitted: false
     };
+  },
+  mounted() {
+    this.$store.dispatch("getQuestions", this.difficulty).then(() => {
+      this.questions = this.$store.state.questions;
+      this.$store.dispatch("resetDefault");
+    });
   },
   computed: {
     answers() {
@@ -40,15 +61,21 @@ export default {
         this.currentQuestion.correct_answer
       ];
       return answers;
-    }
+    },
+    currentQuestion() {
+      return this.questions[this.index];
+    },
+    ...mapGetters(["numTotal", "numCorrect"])
   },
   watch: {
     currentQuestion: {
       immediate: true,
       handler() {
-        this.selectedIndex = null;
-        this.submitted = false;
-        this.shuffleAnswers();
+        if (this.questions.length) {
+          this.selectedIndex = null;
+          this.submitted = false;
+          this.shuffleAnswers();
+        }
       }
     }
   },
@@ -66,9 +93,18 @@ export default {
         this.currentQuestion.correct_answer
       );
     },
+    increment(isCorrect) {
+      if (isCorrect) {
+        this.$store.dispatch("incrementNumCorrect");
+      }
+      this.$store.dispatch("incrementNumTotal");
+    },
     skip() {
       this.next();
       this.increment(false);
+    },
+    next() {
+      this.index++;
     },
     submitAnswer() {
       let isCorrect = false;
@@ -82,6 +118,8 @@ export default {
       setTimeout(() => {
         if (this.index < 9) {
           this.next();
+        } else {
+          this.$router.push("/result");
         }
       }, 2000);
     },
@@ -95,8 +133,8 @@ export default {
         this.selectedIndex === index
       ) {
         submit = "answer wrong";
-      } else if (!this.submitted && this.selectedIndex === index){
-        submit = "answer selected"
+      } else if (!this.submitted && this.selectedIndex === index) {
+        submit = "answer selected";
       }
 
       return submit;
@@ -108,6 +146,7 @@ export default {
 <style scoped>
 .quiz p {
   font-weight: bold;
+  font-size: 1.1em;
 }
 
 .quiz .answers {
@@ -117,6 +156,7 @@ export default {
 
 .quiz .answers .answer {
   margin-bottom: 10px;
+  font-size: 1em;
 }
 
 .quiz .actions {
@@ -129,7 +169,8 @@ export default {
   width: 100px;
   color: #fff;
   border: none;
-  padding: 0.6em 0.6em;
+  padding: 15px;
+  font-size: 1em;
   border-radius: 50px;
 }
 

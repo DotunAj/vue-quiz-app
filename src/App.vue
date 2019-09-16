@@ -1,66 +1,10 @@
 <template>
   <div id="app">
     <section class="quiz-container">
-      <div v-if="questions.length" class="quiz-modal">
-        <Progress :numCorrect="numCorrect" :numTotal="numTotal" />
-        <Question
-          :currentQuestion="questions[index]"
-          :next="next"
-          :index="index"
-          :increment="increment"
-        />
-      </div>
-      <div v-else class="lds-ring">
-        <div></div>
-        <div></div>
-        <div></div>
-        <div></div>
-      </div>
+      <router-view></router-view>
     </section>
   </div>
 </template>
-
-<script>
-import Progress from "./components/Progress";
-import Question from "./components/Question";
-
-export default {
-  name: "app",
-  components: {
-    Progress,
-    Question
-  },
-  data() {
-    return {
-      questions: [],
-      index: 0,
-      numCorrect: 0,
-      numTotal: 0
-    };
-  },
-  methods: {
-    next() {
-      this.index++;
-    },
-    increment(isCorrect) {
-      if (isCorrect) {
-        this.numCorrect++;
-      }
-      this.numTotal++;
-    }
-  },
-  mounted() {
-    fetch("https://opentdb.com/api.php?amount=10&category=18&type=multiple")
-      .then(response => {
-        return response.json();
-      })
-      .then(data => {
-        this.questions = data.results;
-      });
-  }
-};
-</script>
-
 
 <style>
 body {
@@ -118,7 +62,7 @@ button:active {
   background-color: #fff;
   border-radius: 16px;
   padding: 60px 30px;
-  width: 640px;
+  max-width: 640px;
 }
 
 .lds-ring {
